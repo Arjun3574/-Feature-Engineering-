@@ -1,47 +1,44 @@
 # -Feature-Engineering-
 
-# ML Feature Engineering Pipeline
 
-This repository contains the Python code for a university assignment demonstrating a complete feature engineering pipeline. The project applies various preprocessing, feature extraction, and selection techniques to two distinct datasets:
 
-1.  **Image Data (Computer Vision):** [Dog vs Cat Dataset](https://www.kaggle.com/datasets/anthonytherrien/dog-vs-cat)
-2.  **Text Data (NLP):** [IMDB 50K Movie Reviews Dataset](https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews)
+# My Machine Learning Feature Engineering Project
 
-The project is implemented in a Jupyter Notebook / Google Colab environment using `tensorflow`, `pandas`, and `scikit-learn`.
+This is my project for my data science assignment. The goal wasn't just to build a model, but to really focus on all the **data preparation steps** that happen *before* you even start training.
 
----
+I wanted to show how these steps change depending on the data, so I worked with two completely different datasets:
+1.  **Image Data:** The classic "Dog vs. Cat" dataset.
+2.  **Text Data:** 50,000 IMDB Movie Reviews.
 
-## ⚙️ Feature Engineering Steps
-
-### 1. Image Dataset (Dog vs. Cat)
-
-For the image data, standard preprocessing steps were adapted for a deep learning context.
-
-* **Load & Encode:** Data was loaded using `tf.keras.utils.image_dataset_from_directory`. This function efficiently loads images and automatically performs **Label Encoding** on the target variable by converting the folder names (`cat`, `dog`) into binary labels (`0`, `1`).
-* **Handle Missing Data:** The loader **automatically skips** any corrupted or unreadable image files.
-* **Feature Scaling:** We used `tf.keras.applications.mobilenet_v2.preprocess_input`. This is a specialized **Normalization** function that scales pixel values from the `[0, 255]` range to the `[-1, 1]` range required by the pre-trained model.
-* **Feature Extraction (Transfer Learning):** Instead of PCA, we used a pre-trained **MobileNetV2** model as a feature extractor. By setting `include_top=False` and `trainable=False`, we use the model's powerful, pre-learned filters to convert raw images into high-level feature maps.
-* **Feature Selection / Reduction:** A `GlobalAveragePooling2D` layer was added after the feature extractor. This layer "selects" the most dominant features from the multi-dimensional feature maps and reduces them to a single vector, making classification efficient.
-* **Impact:** This pipeline transformed raw image files into a format suitable for a neural network. Using pre-trained features allowed our simple model to achieve **100% validation accuracy**, demonstrating the power of transfer learning as a feature engineering technique.
-
-### 2. Text Dataset (IMDB Movie Reviews)
-
-For the text data, a classic Natural Language Processing (NLP) pipeline was built.
-
-* **Load & Explore:** Data was loaded into a `pandas` DataFrame. Exploration with `.info()` and `.isnull().sum()` confirmed there was **no missing data** to impute.
-* **Data Cleaning:** A custom function was applied to all reviews to:
-    1.  Remove HTML tags (`<br />`).
-    2.  Remove punctuation and numbers.
-    3.  Convert all text to lowercase.
-    4.  Remove common English "stop words" (e.g., 'the', 'is', 'a').
-* **Encode Categorical Variables:** The `sentiment` column ('positive'/'negative') was **Label Encoded** to `1` and `0` using `sklearn.preprocessing.LabelEncoder`.
-* **Feature Extraction (TF-IDF):** The raw text was converted into a numerical matrix using `TfidfVectorizer`. This extracted **5,000 numerical features** based on word importance (Term Frequency-Inverse Document Frequency).
-* **Feature Scaling:** The `TfidfVectorizer` **automatically performs L2 Normalization** on its output by default, which fulfills the scaling requirement.
-* **Feature Selection:** `SelectKBest` with the `chi2` statistical test was applied to the 5,000 TF-IDF features to select the **top 2,000 most statistically relevant features**.
-* **Impact:** The pipeline successfully transformed unstructured, "dirty" text into a clean, normalized, and feature-selected matrix. A Naive Bayes model trained on this final matrix achieved **~88% accuracy**, proving the transformations were highly effective.
+I did all the work in a Google Colab notebook using Python, mainly with TensorFlow, Pandas, and Scikit-learn.
 
 ---
 
-## ⚖️ Ethical Discussion
+## ⚙️ What I Did: The Feature Engineering Steps
 
-The final part of the assignment discusses the ethical concerns of using protected-class features like 'Gender' or 'Marital Status' in a predictive model (e.g., for employee attrition). The primary mitigation strategy identified is the **exclusion of these features** from the model and the subsequent **auditing for proxy-variable bias** to ensure fairness.
+### 1. For the Image Data (Dog vs. Cat) 🖼️
+
+Working with images is very different from a simple table, so I used a modern deep learning approach.
+
+* **Loading & Labeling:** I used a handy TensorFlow function (`image_dataset_from_directory`) that did two jobs at once. It loaded all the images *and* automatically handled the labels. It saw the 'cat' and 'dog' folder names and just knew to label them as `0` and `1`.
+* **Scaling the Pixels:** Neural networks work best when input numbers are small. Instead of the usual `[0, 255]` pixel values, I used a special function (`preprocess_input`) to scale them all to the `[-1, 1]` range. This helps the model train much faster.
+* **Extracting Features (The Cool Part):** This was the most important step. Instead of training a model from scratch (which takes forever), I used **Transfer Learning**. I loaded a powerful, pre-trained model called `MobileNetV2` and "froze" it. I basically used it as a super-smart feature extractor. It already knows how to find edges, textures, and shapes, so it did all the heavy lifting for me.
+* **The Result:** It worked incredibly well! By just adding a tiny classifier on top of these pre-trained features, my model got **100% accuracy** on the validation set. It really shows how powerful this technique is.
+
+### 2. For the Text Data (IMDB Reviews) 📝
+
+This was a more "classic" NLP problem, so I built a pipeline using Pandas and Scikit-learn.
+
+* **Cleaning the Text:** This was the biggest job. The raw reviews were messy—full of HTML tags (`<br />`), punctuation, and common "stop words" (like 'the', 'is', 'a') that just add noise. I wrote a function to strip all of that junk out and turn everything into lowercase.
+* **Encoding Labels:** Just like with the images, I had to turn the text labels ("positive" and "negative") into numbers. `LabelEncoder` made this easy, converting them to `1` and `0`.
+* **Turning Words into Numbers (TF-IDF):** A model can't read words, so I used `TfidfVectorizer`. This tool is smart: it converts all the cleaned reviews into a big matrix of numbers, scoring words based on how *important* they are to a review (not just how often they appear). I had it find the 5,000 most important words.
+* **Selecting the *Best* Features:** 5,000 features is still a lot. So, I used a statistical test (`chi2`) to find the **top 2,000 features** from that list that were the *most* predictive of a good or bad review.
+* **The Result:** This pipeline turned a huge, messy pile of text into a clean, smart, and efficient set of features. A simple Naive Bayes model trained on this final data got **~88% accuracy**, which shows the whole process was a success!
+
+---
+
+##  A Note on Ethics
+
+The assignment also asked about the ethics of using features like 'Gender' or 'Marital Status' to predict something like employee attrition.
+
+My conclusion is that it's a terrible idea. It's a textbook example of bias, where the model would just learn to discriminate based on historical prejudices. The best way to mitigate this is simple: **don't use those features.** The next step would be to actively check if other features (like 'Job Title' or 'Department') are acting as a secret proxy for them.
